@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>整体KOTOBUKI -寿- FC収支シミュレーション</title>
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-500: #6b7280;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --radius: 8px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  line-height: 1.6;
+  padding-bottom: 40px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 24px 16px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+header h1 { font-size: 1.5rem; font-weight: 700; }
+header p { font-size: 0.875rem; opacity: 0.9; margin-top: 4px; }
+
+.section {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.section-header {
+  background: var(--gray-100);
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.section-header .toggle-icon { transition: transform 0.2s; }
+.section-header.collapsed .toggle-icon { transform: rotate(-90deg); }
+.section-body { padding: 16px; }
+.section-body.collapsed { display: none; }
+
+label { font-size: 0.8rem; color: var(--gray-500); display: block; margin-bottom: 2px; }
+input[type="number"], input[type="text"], select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+input[type="number"]:focus, input[type="text"]:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.cost-row {
+  display: grid;
+  grid-template-columns: 1fr 140px 36px;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 8px;
+}
+.cost-row input[type="number"] { text-align: right; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-sm { padding: 4px 8px; font-size: 0.7rem; }
+.btn-outline {
+  background: white;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+.btn-outline:hover { background: var(--gray-100); }
+.btn-icon {
+  width: 30px; height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  border: 1px solid var(--gray-300);
+  background: white;
+  color: var(--danger);
+  cursor: pointer;
+}
+.btn-icon:hover { background: #fee2e2; }
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 2px solid var(--gray-900);
+  margin-top: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.param-group {
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.param-group-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: var(--gray-700);
+}
+.param-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.param-row label { margin-bottom: 0; font-size: 0.8rem; }
+.param-row .calc-result {
+  background: var(--gray-200);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: right;
+  font-size: 0.95rem;
+}
+
+.month-tabs {
+  display: flex;
+  overflow-x: auto;
+  gap: 4px;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.month-tab {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.month-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.copy-btns {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.view-toggle {
+  display: flex;
+  background: var(--gray-200);
+  border-radius: 20px;
+  padding: 3px;
+  width: fit-content;
+}
+.view-btn {
+  padding: 6px 16px;
+  border-radius: 18px;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--gray-500);
+}
+.view-btn.active {
+  background: white;
+  color: var(--gray-900);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 800px;
+}
+th, td {
+  padding: 8px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+th { background: var(--gray-100); font-weight: 700; position: sticky; top: 0; z-index: 1; }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: white; z-index: 2; min-width: 120px; }
+th:first-child { z-index: 3; background: var(--gray-100); }
+tr.row-revenue td { color: var(--primary); font-weight: 600; }
+tr.row-total { border-top: 2px solid var(--gray-900); font-weight: 700; }
+tr.row-profit td { font-weight: 700; }
+tr.row-cumulative td { font-weight: 700; font-size: 0.9rem; }
+
+.chart-container {
+  width: 100%;
+  height: 280px;
+  margin-top: 16px;
+  position: relative;
+}
+canvas { width: 100% !important; height: 100% !important; }
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.summary-card {
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+}
+.summary-card .label { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 4px; }
+.summary-card .value { font-size: 1.2rem; font-weight: 700; }
+.summary-card .value.positive { color: var(--success); }
+.summary-card .value.negative { color: var(--danger); }
+
+.recovery-info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+}
+.recovery-info strong { color: var(--primary); }
+
+.print-bar { text-align: center; margin: 20px 0; }
+
+/* Save/Load bar */
+.save-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin: 16px 0;
+  padding: 12px;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.save-bar .save-status {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  width: 100%;
+  text-align: center;
+}
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { background: #15803d; }
+.btn-warn { background: #f59e0b; color: white; }
+.btn-warn:hover { background: #d97706; }
+.file-input-hidden { display: none; }
+
+/* Start month selector */
+.start-month-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #eff6ff;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.start-month-bar select { width: auto; min-width: 80px; }
+
+/* Labor sub-fields in month editor */
+.labor-sub {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.labor-sub label { font-size: 0.7rem; }
+
+@media print {
+  body { background: white; padding: 0; }
+  .container { padding: 0; max-width: 100%; }
+  header { background: var(--primary) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .section { box-shadow: none; break-inside: avoid; }
+  .section-header { cursor: default; }
+  .section-body.collapsed { display: block !important; }
+  .month-tabs, .copy-btns, .btn, .print-bar, #monthlyInput .section-body, .start-month-bar { display: none !important; }
+  .no-print { display: none !important; }
+  table { min-width: auto; font-size: 0.75rem; }
+  th, td { padding: 4px 6px; }
+  .chart-container { height: 200px; }
+  .summary-cards { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Device toggle button in header */
+.device-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+.device-btn {
+  padding: 4px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.5);
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.device-btn.active {
+  background: rgba(255,255,255,0.25);
+  color: white;
+  border-color: white;
+}
+
+/* SP (mobile) mode forced via class */
+body.sp-mode .container { max-width: 500px; }
+body.sp-mode .cost-row { grid-template-columns: 1fr 120px 30px; }
+body.sp-mode .param-row { grid-template-columns: 90px 1fr; }
+body.sp-mode .summary-cards { grid-template-columns: repeat(2, 1fr); }
+body.sp-mode header h1 { font-size: 1.2rem; }
+body.sp-mode table { font-size: 0.75rem; }
+body.sp-mode th, body.sp-mode td { padding: 6px 8px; }
+
+/* SP mode: hide PC sections & input sections, show SP summary view */
+body.sp-mode .pc-only { display: none !important; }
+body.sp-mode .sp-only { display: block !important; }
+body:not(.sp-mode) .sp-only { display: none !important; }
+body.sp-mode #initialCosts { display: none !important; }
+body.sp-mode #commonParams { display: none !important; }
+body.sp-mode #monthlyInput { display: none !important; }
+body.sp-mode .start-month-bar { display: none !important; }
+body.sp-mode .save-bar { display: none !important; }
+body.sp-mode .view-toggle { display: none !important; }
+
+/* SP summary view styles */
+.sp-section-title { font-weight: 700; font-size: 0.85rem; color: var(--gray-700); margin: 16px 0 8px; }
+
+.sp-mini-chart {
+  display: flex; align-items: end; gap: 3px; height: 100px;
+  background: white; border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  padding: 12px 8px 4px;
+}
+.sp-bar-col { flex: 1; text-align: center; }
+.sp-bar-rect { border-radius: 3px 3px 0 0; margin: 0 auto; width: 75%; transition: height 0.3s; }
+.sp-bar-label { font-size: 0.55rem; color: var(--gray-500); margin-top: 3px; }
+
+.sp-expense-card {
+  background: white; border-radius: var(--radius); padding: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.sp-exp-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--gray-100);
+}
+.sp-exp-row:last-child { border-bottom: none; }
+.sp-exp-left { display: flex; align-items: center; gap: 6px; }
+.sp-exp-name { font-size: 0.8rem; color: var(--gray-700); }
+.sp-exp-pct { font-size: 0.65rem; color: var(--gray-500); }
+.sp-exp-right { display: flex; align-items: center; gap: 6px; }
+.sp-exp-bar { width: 50px; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+.sp-exp-bar-fill { height: 100%; border-radius: 3px; background: var(--primary); }
+.sp-exp-val { font-size: 0.8rem; font-weight: 600; color: var(--gray-700); min-width: 80px; text-align: right; }
+
+.sp-recovery-card {
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius);
+  padding: 14px; margin-top: 14px; text-align: center;
+}
+.sp-recovery-card .big { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+.sp-recovery-card .sub { font-size: 0.75rem; color: var(--gray-500); margin-top: 2px; }
+
+/* SP month card (Pattern B) */
+.sp-month-tabs {
+  display: flex; gap: 4px; overflow-x: auto; padding-bottom: 8px; margin: 14px 0 10px;
+  -webkit-overflow-scrolling: touch;
+}
+.sp-mt-btn {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 16px;
+  border: 1px solid var(--gray-300); background: white;
+  font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.sp-mt-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.sp-month-card {
+  background: white; border-radius: var(--radius); padding: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.sp-mc-header {
+  font-weight: 700; font-size: 0.95rem; color: var(--primary);
+  border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 10px;
+  display: flex; justify-content: space-between;
+}
+.sp-mc-header .sub { font-size: 0.7rem; color: var(--gray-500); font-weight: 400; }
+.sp-mc-row {
+  display: flex; justify-content: space-between; padding: 5px 0;
+  font-size: 0.82rem; border-bottom: 1px solid var(--gray-100);
+}
+.sp-mc-row:last-child { border-bottom: none; }
+.sp-mc-row.rev { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+.sp-mc-row.total { border-top: 2px solid var(--gray-900); border-bottom: none; font-weight: 700; margin-top: 6px; padding-top: 8px; }
+.sp-mc-row.profit { font-weight: 700; font-size: 0.9rem; }
+.sp-mc-row .lbl { color: var(--gray-700); }
+.sp-mc-row .val { font-weight: 600; }
+
+/* PC mode forced via class */
+body.pc-mode .container { max-width: 1200px; }
+
+/* Auto mode: responsive by screen width (default) */
+@media (max-width: 640px) {
+  body:not(.pc-mode) header h1 { font-size: 1.2rem; }
+  body:not(.pc-mode) .cost-row { grid-template-columns: 1fr 120px 30px; }
+  body:not(.pc-mode) .param-row { grid-template-columns: 90px 1fr; }
+  body:not(.pc-mode) .summary-cards { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>整体KOTOBUKI -寿-</h1>
+  <p>FC収支シミュレーション</p>
+  <div class="device-toggle no-print">
+    <button class="device-btn" onclick="setDevice('auto', this)" id="btnAuto">自動</button>
+    <button class="device-btn active" onclick="setDevice('pc', this)" id="btnPC">PC版</button>
+    <button class="device-btn" onclick="setDevice('sp', this)" id="btnSP">スマホ版</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- スタート月設定 -->
+  <div class="start-month-bar no-print">
+    <span>開始月:</span>
+    <select id="startMonth" onchange="onStartMonthChange()">
+      <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+      <option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option>
+      <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+      <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+    </select>
+    <span style="color:var(--gray-500);font-weight:400">から12ヶ月間のシミュレーション</span>
+  </div>
+
+  <!-- 初期設備費用 -->
+  <div class="section" id="initialCosts">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span>初期設備費用</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div id="costItems"></div>
+      <button class="btn btn-outline" onclick="addCostItem()" style="margin-top:8px">＋ 項目を追加</button>
+      <div class="total-row">
+        <span>初期投資合計</span>
+        <span id="initialTotal">¥0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 共通パラメータ -->
+  <div class="section" id="commonParams">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span>共通パラメータ設定</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="param-group">
+        <div class="param-group-title">法定福利費率</div>
+        <div class="param-row">
+          <label>法定福利費率</label>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" id="benefitRate" value="15" min="0" max="100" step="0.1" style="width:80px" oninput="recalcAll()">
+            <span style="font-size:0.85rem">%</span>
+          </div>
+        </div>
+        <p style="font-size:0.75rem;color:var(--gray-500);margin-top:4px">※ 人件費に対して自動計算されます（月別の人件費に連動）</p>
+      </div>
+
+      <div class="param-group">
+        <div class="param-group-title">業務委託費設定</div>
+        <div class="param-row">
+          <label>委託料率</label>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" id="outsourceRate" value="30" min="0" max="100" step="1" style="width:80px" oninput="recalcAll()">
+            <span style="font-size:0.85rem">%</span>
+          </div>
+        </div>
+        <div class="param-row">
+          <label>個人売上</label>
+          <input type="number" id="personalRevenue" value="0" step="10000" oninput="recalcAll()">
+        </div>
+        <div class="param-row">
+          <label>業務委託費</label>
+          <div class="calc-result" id="calcOutsource">¥0</div>
+        </div>
+      </div>
+
+      <div class="param-group">
+        <div class="param-group-title">ロイヤリティ設定</div>
+        <div class="param-row">
+          <label>ロイヤリティ率</label>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" id="royaltyRate" value="15" min="0" max="100" step="0.1" style="width:80px" oninput="recalcAll()">
+            <span style="font-size:0.85rem">%</span>
+          </div>
+        </div>
+        <p style="font-size:0.75rem;color:var(--gray-500);margin-top:4px">※ 消費税10%を含めて計算されます</p>
+      </div>
+
+      <div class="param-group">
+        <div class="param-group-title">広告代行手数料設定</div>
+        <p style="font-size:0.75rem;color:var(--gray-500)">※ 広告宣伝費の10% + 消費税10%で自動計算されます</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 月次入力 -->
+  <div class="section" id="monthlyInput">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span>月次データ入力</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="month-tabs" id="monthTabs"></div>
+      <div id="monthEditor"></div>
+    </div>
+  </div>
+
+  <!-- 収支結果 -->
+  <div class="section">
+    <div class="section-header">
+      <span>収支シミュレーション結果</span>
+      <div class="view-toggle no-print">
+        <button class="view-btn active" onclick="setView('monthly', this)">月次</button>
+        <button class="view-btn" onclick="setView('yearly', this)">年間</button>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="summary-cards" id="summaryCards"></div>
+      <!-- PC view -->
+      <div class="pc-only">
+        <div class="table-wrap" id="resultTable"></div>
+        <div class="chart-container">
+          <canvas id="chart"></canvas>
+        </div>
+        <div class="recovery-info" id="recoveryInfo"></div>
+      </div>
+      <!-- SP view (Pattern C: Summary) -->
+      <div class="sp-only" id="spView"></div>
+    </div>
+  </div>
+
+  <!-- 保存・読込バー -->
+  <div class="save-bar no-print">
+    <button class="btn btn-success" onclick="exportJSON()">💾 データ保存（JSON）</button>
+    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📂 データ読込</button>
+    <button class="btn btn-warn" onclick="resetAll()">🔄 リセット</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ PDF出力</button>
+    <input type="file" id="fileInput" class="file-input-hidden" accept=".json" onchange="importJSON(event)">
+    <div class="save-status" id="saveStatus">自動保存: 有効</div>
+  </div>
+
+</div>
+
+<script>
+// ===== State =====
+const MONTHS = 12;
+// Manual fields per month (labor is now monthly with salary+count)
+const MANUAL_FIELDS = ['revenue','advertising','utilities','communication','rent','creditFee','misc'];
+const FIELD_LABELS = {
+  revenue: '売上', advertising: '広告宣伝費', labor: '人件費', benefit: '法定福利費',
+  utilities: '光熱費', communication: '通信費', outsource: '業務委託費',
+  royalty: 'ロイヤリティ', adAgencyFee: '広告代行手数料', creditFee: 'クレジット手数料',
+  rent: '家賃', misc: '諸経費'
+};
+
+let startMonth = 4; // default April
+let monthlyData = [];
+let currentMonth = 0;
+let currentView = 'monthly';
+
+const defaultCostItems = [
+  { name: '物件取得費', amount: 0 },
+  { name: '内装工事費', amount: 0 },
+  { name: '設備・備品費', amount: 0 },
+  { name: '加盟金', amount: 0 },
+  { name: '保証金', amount: 0 },
+  { name: '研修費', amount: 0 },
+];
+let costItems = [...defaultCostItems];
+
+// Initialize monthly data (includes labor salary & count per month)
+function initMonthlyData() {
+  monthlyData = [];
+  for (let i = 0; i < MONTHS; i++) {
+    const d = { laborSalary: 0, laborCount: 0 };
+    MANUAL_FIELDS.forEach(f => d[f] = 0);
+    monthlyData.push(d);
+  }
+}
+initMonthlyData();
+
+// ===== Start Month =====
+function getMonthLabel(idx) {
+  const m = ((startMonth - 1 + idx) % 12) + 1;
+  return m + '月';
+}
+
+function onStartMonthChange() {
+  startMonth = Number(document.getElementById('startMonth').value);
+  renderMonthTabs();
+  renderMonthEditor();
+  recalcAll();
+}
+
+// ===== Initial Costs =====
+function renderCostItems() {
+  const el = document.getElementById('costItems');
+  el.innerHTML = costItems.map((item, i) => `
+    <div class="cost-row">
+      <input type="text" value="${item.name}" onchange="costItems[${i}].name=this.value" placeholder="項目名">
+      <input type="number" value="${item.amount}" step="10000" onchange="costItems[${i}].amount=Number(this.value);updateInitialTotal();" placeholder="金額">
+      <button class="btn-icon" onclick="removeCostItem(${i})" title="削除">×</button>
+    </div>
+  `).join('');
+  updateInitialTotal();
+}
+
+function addCostItem() {
+  costItems.push({ name: '', amount: 0 });
+  renderCostItems();
+}
+
+function removeCostItem(i) {
+  costItems.splice(i, 1);
+  renderCostItems();
+}
+
+function getInitialTotal() {
+  return costItems.reduce((s, c) => s + (c.amount || 0), 0);
+}
+
+function updateInitialTotal() {
+  document.getElementById('initialTotal').textContent = fmt(getInitialTotal());
+  recalcAll();
+}
+
+// ===== Month Tabs =====
+function renderMonthTabs() {
+  const el = document.getElementById('monthTabs');
+  el.innerHTML = Array.from({length: MONTHS}, (_, i) =>
+    `<button class="month-tab ${i === currentMonth ? 'active' : ''}" onclick="selectMonth(${i})">${getMonthLabel(i)}</button>`
+  ).join('');
+}
+
+function selectMonth(m) {
+  currentMonth = m;
+  renderMonthTabs();
+  renderMonthEditor();
+}
+
+// ===== Month Editor =====
+function renderMonthEditor() {
+  const m = currentMonth;
+  const d = monthlyData[m];
+
+  // Labor section with salary + count (monthly)
+  let html = `
+    <div class="param-group">
+      <div class="param-group-title">人件費（${getMonthLabel(m)}）</div>
+      <div class="labor-sub">
+        <div>
+          <label>月額給与</label>
+          <input type="number" value="${d.laborSalary}" step="10000"
+                 oninput="monthlyData[${m}].laborSalary=Number(this.value);recalcAll();">
+        </div>
+        <div>
+          <label>人数</label>
+          <input type="number" value="${d.laborCount}" min="0" step="1"
+                 oninput="monthlyData[${m}].laborCount=Number(this.value);recalcAll();">
+        </div>
+      </div>
+      <div class="param-row">
+        <label>人件費</label>
+        <div class="calc-result">${fmt(d.laborSalary * d.laborCount)}</div>
+      </div>
+      <div class="param-row">
+        <label>法定福利費</label>
+        <div class="calc-result">${fmt(Math.round(d.laborSalary * d.laborCount * (Number(document.getElementById('benefitRate')?.value || 15) / 100)))}</div>
+      </div>
+      <div class="copy-btns">
+        ${m > 0 ? `<button class="btn btn-sm btn-outline" onclick="copyLaborFromPrev(${m})">← 前月コピー</button>` : ''}
+        ${m < MONTHS-1 ? `<button class="btn btn-sm btn-outline" onclick="copyLaborToAfter(${m})">→ 以降コピー</button>` : ''}
+      </div>
+    </div>`;
+
+  // Other manual fields
+  html += MANUAL_FIELDS.map(f => `
+    <div class="param-group">
+      <div class="param-row">
+        <label>${FIELD_LABELS[f]}</label>
+        <input type="number" value="${d[f]}" step="10000"
+               oninput="monthlyData[${m}]['${f}']=Number(this.value);recalcAll();"
+               id="input_${f}_${m}">
+      </div>
+      ${f === 'advertising' ? `<div class="param-row"><label>広告代行手数料</label><div class="calc-result">${fmt(Math.round(d[f] * 0.1 * 1.1))}</div></div>` : ''}
+      <div class="copy-btns">
+        ${m > 0 ? `<button class="btn btn-sm btn-outline" onclick="copyFromPrev(${m},'${f}')">← 前月コピー</button>` : ''}
+        ${m < MONTHS-1 ? `<button class="btn btn-sm btn-outline" onclick="copyToAfter(${m},'${f}')">→ 以降コピー</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('monthEditor').innerHTML = html;
+}
+
+function copyFromPrev(m, field) {
+  monthlyData[m][field] = monthlyData[m-1][field];
+  renderMonthEditor();
+  recalcAll();
+}
+
+function copyToAfter(m, field) {
+  const v = monthlyData[m][field];
+  for (let i = m+1; i < MONTHS; i++) monthlyData[i][field] = v;
+  recalcAll();
+}
+
+function copyLaborFromPrev(m) {
+  monthlyData[m].laborSalary = monthlyData[m-1].laborSalary;
+  monthlyData[m].laborCount = monthlyData[m-1].laborCount;
+  renderMonthEditor();
+  recalcAll();
+}
+
+function copyLaborToAfter(m) {
+  const sal = monthlyData[m].laborSalary;
+  const cnt = monthlyData[m].laborCount;
+  for (let i = m+1; i < MONTHS; i++) {
+    monthlyData[i].laborSalary = sal;
+    monthlyData[i].laborCount = cnt;
+  }
+  recalcAll();
+}
+
+// ===== Calculations =====
+function getGlobalParams() {
+  const bRate = (Number(document.getElementById('benefitRate').value) || 0) / 100;
+  const oRate = (Number(document.getElementById('outsourceRate').value) || 0) / 100;
+  const pRev = Number(document.getElementById('personalRevenue').value) || 0;
+  const rRate = (Number(document.getElementById('royaltyRate').value) || 0) / 100;
+  const outsource = Math.round(pRev * oRate);
+  return { bRate, outsource, rRate };
+}
+
+function getMonthResult(m, params) {
+  const d = monthlyData[m];
+  const revenue = d.revenue || 0;
+  const labor = (d.laborSalary || 0) * (d.laborCount || 0);
+  const benefit = Math.round(labor * params.bRate);
+  const royalty = Math.round(revenue * params.rRate * 1.1);
+  const adFee = Math.round((d.advertising || 0) * 0.1 * 1.1); // 広告代行手数料 = 広告費 * 10% * 1.1(税込)
+
+  const expenses = {
+    advertising: d.advertising || 0,
+    labor: labor,
+    benefit: benefit,
+    utilities: d.utilities || 0,
+    communication: d.communication || 0,
+    outsource: params.outsource,
+    royalty: royalty,
+    adAgencyFee: adFee,
+    creditFee: d.creditFee || 0,
+    rent: d.rent || 0,
+    misc: d.misc || 0,
+  };
+
+  const totalExpense = Object.values(expenses).reduce((s,v) => s+v, 0);
+  const profit = revenue - totalExpense;
+  return { revenue, expenses, totalExpense, profit };
+}
+
+function recalcAll() {
+  const params = getGlobalParams();
+
+  // Update outsource display
+  document.getElementById('calcOutsource').textContent = fmt(params.outsource);
+
+  const results = [];
+  let cumProfit = -getInitialTotal();
+  let yearRevenue = 0, yearExpense = 0;
+
+  for (let i = 0; i < MONTHS; i++) {
+    const r = getMonthResult(i, params);
+    cumProfit += r.profit;
+    yearRevenue += r.revenue;
+    yearExpense += r.totalExpense;
+    results.push({ ...r, cumProfit });
+  }
+
+  const yearProfit = yearRevenue - yearExpense;
+  const profitRate = yearRevenue > 0 ? (yearProfit / yearRevenue * 100).toFixed(1) : '0.0';
+
+  renderSummary(yearRevenue, yearExpense, yearProfit, profitRate, results[MONTHS-1].cumProfit, results);
+  renderTable(results);
+  renderChart(results);
+  renderRecovery(results);
+  renderSpView(results, yearRevenue, yearExpense, yearProfit, profitRate);
+}
+
+// ===== Rendering =====
+function fmt(n) {
+  return '\u00a5' + Math.round(n).toLocaleString('ja-JP');
+}
+
+function getRecoveryMonthsText(results) {
+  const initial = getInitialTotal();
+  if (initial <= 0) return { value: '—', cls: '' };
+  // Check within 12 months
+  for (let i = 0; i < MONTHS; i++) {
+    if (results[i].cumProfit >= 0) return { value: (i + 1) + 'ヶ月', cls: 'positive' };
+  }
+  // Estimate from avg profit
+  const avgProfit = results.reduce((s, r) => s + r.profit, 0) / MONTHS;
+  if (avgProfit > 0) {
+    return { value: '約' + Math.ceil(initial / avgProfit) + 'ヶ月', cls: '' };
+  }
+  return { value: '回収困難', cls: 'negative' };
+}
+
+function renderSummary(rev, exp, profit, rate, cumProfit, results) {
+  const recovery = getRecoveryMonthsText(results);
+  const cards = [
+    { label: '年間売上', value: fmt(rev), cls: '' },
+    { label: '年間経費', value: fmt(exp), cls: '' },
+    { label: '年間営業利益', value: fmt(profit), cls: profit >= 0 ? 'positive' : 'negative' },
+    { label: '利益率', value: rate + '%', cls: profit >= 0 ? 'positive' : 'negative' },
+    { label: '初期投資', value: fmt(getInitialTotal()), cls: '' },
+    { label: '投資回収', value: recovery.value, cls: recovery.cls },
+  ];
+  document.getElementById('summaryCards').innerHTML = cards.map(c =>
+    `<div class="summary-card"><div class="label">${c.label}</div><div class="value ${c.cls}">${c.value}</div></div>`
+  ).join('');
+}
+
+function renderTable(results) {
+  const EXPENSE_KEYS = ['advertising','labor','benefit','utilities','communication','outsource','royalty','adAgencyFee','creditFee','rent','misc'];
+
+  if (currentView === 'monthly') {
+    let head = '<tr><th>項目</th>';
+    for (let i = 0; i < MONTHS; i++) head += `<th>${getMonthLabel(i)}</th>`;
+    head += '<th>年合計</th></tr>';
+
+    let body = '<tr class="row-revenue"><td>売上</td>';
+    let yearRev = 0;
+    for (let i = 0; i < MONTHS; i++) { body += `<td>${fmt(results[i].revenue)}</td>`; yearRev += results[i].revenue; }
+    body += `<td>${fmt(yearRev)}</td></tr>`;
+
+    EXPENSE_KEYS.forEach(k => {
+      body += `<tr><td>${FIELD_LABELS[k]}</td>`;
+      let yearVal = 0;
+      for (let i = 0; i < MONTHS; i++) {
+        const v = results[i].expenses[k];
+        body += `<td>${fmt(v)}</td>`;
+        yearVal += v;
+      }
+      body += `<td>${fmt(yearVal)}</td></tr>`;
+    });
+
+    body += '<tr class="row-total"><td>経費合計</td>';
+    let yearExp = 0;
+    for (let i = 0; i < MONTHS; i++) { body += `<td>${fmt(results[i].totalExpense)}</td>`; yearExp += results[i].totalExpense; }
+    body += `<td>${fmt(yearExp)}</td></tr>`;
+
+    const yearProfit = yearRev - yearExp;
+    body += `<tr class="row-profit"><td>営業利益</td>`;
+    for (let i = 0; i < MONTHS; i++) {
+      body += `<td style="color:${results[i].profit >= 0 ? 'var(--success)' : 'var(--danger)'};font-weight:700">${fmt(results[i].profit)}</td>`;
+    }
+    body += `<td style="color:${yearProfit >= 0 ? 'var(--success)' : 'var(--danger)'};font-weight:700">${fmt(yearProfit)}</td></tr>`;
+
+    body += `<tr class="row-cumulative"><td>累計損益</td>`;
+    for (let i = 0; i < MONTHS; i++) {
+      body += `<td style="color:${results[i].cumProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(results[i].cumProfit)}</td>`;
+    }
+    body += `<td>—</td></tr>`;
+
+    document.getElementById('resultTable').innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+  } else {
+    let yearRev = 0, yearExp = 0;
+    const yearExpenses = {};
+    EXPENSE_KEYS.forEach(k => yearExpenses[k] = 0);
+    results.forEach(r => {
+      yearRev += r.revenue;
+      yearExp += r.totalExpense;
+      EXPENSE_KEYS.forEach(k => yearExpenses[k] += r.expenses[k]);
+    });
+
+    let body = `<tr class="row-revenue"><td>売上</td><td>${fmt(yearRev)}</td><td>—</td></tr>`;
+    EXPENSE_KEYS.forEach(k => {
+      const pct = yearRev > 0 ? (yearExpenses[k]/yearRev*100).toFixed(1)+'%' : '—';
+      body += `<tr><td>${FIELD_LABELS[k]}</td><td>${fmt(yearExpenses[k])}</td><td>${pct}</td></tr>`;
+    });
+    body += `<tr class="row-total"><td>経費合計</td><td>${fmt(yearExp)}</td><td>${yearRev > 0 ? (yearExp/yearRev*100).toFixed(1)+'%' : '—'}</td></tr>`;
+
+    const yp = yearRev - yearExp;
+    body += `<tr class="row-profit"><td>営業利益</td><td style="color:${yp>=0?'var(--success)':'var(--danger)'};font-weight:700">${fmt(yp)}</td><td>${yearRev > 0 ? (yp/yearRev*100).toFixed(1)+'%' : '—'}</td></tr>`;
+    body += `<tr class="row-cumulative"><td>累計損益</td><td style="color:${results[MONTHS-1].cumProfit>=0?'var(--success)':'var(--danger)'}">${fmt(results[MONTHS-1].cumProfit)}</td><td>—</td></tr>`;
+
+    document.getElementById('resultTable').innerHTML = `<table>
+      <thead><tr><th>項目</th><th>年間合計</th><th>売上比</th></tr></thead>
+      <tbody>${body}</tbody></table>`;
+  }
+}
+
+function renderRecovery(results) {
+  const initial = getInitialTotal();
+  if (initial === 0) {
+    document.getElementById('recoveryInfo').innerHTML = '<strong>初期投資が未入力</strong>です。初期設備費用を入力すると投資回収期間が表示されます。';
+    return;
+  }
+
+  let recoveryMonth = -1;
+  for (let i = 0; i < MONTHS; i++) {
+    if (results[i].cumProfit >= 0) { recoveryMonth = i + 1; break; }
+  }
+
+  if (recoveryMonth > 0) {
+    document.getElementById('recoveryInfo').innerHTML = `投資回収期間の目安: <strong>${recoveryMonth}ヶ月目（${getMonthLabel(recoveryMonth-1)}）</strong>で初期投資（${fmt(initial)}）を回収見込み`;
+  } else {
+    const finalCum = results[MONTHS-1].cumProfit;
+    const remaining = Math.abs(finalCum);
+    const avgMonthlyProfit = results.reduce((s,r) => s+r.profit, 0) / MONTHS;
+    if (avgMonthlyProfit > 0) {
+      const totalMonths = Math.ceil(initial / avgMonthlyProfit);
+      document.getElementById('recoveryInfo').innerHTML = `12ヶ月時点の累計損益: <strong style="color:var(--danger)">${fmt(finalCum)}</strong>（残り${fmt(remaining)}）<br>平均月間利益ベースでの回収見込み: 約<strong>${totalMonths}ヶ月</strong>`;
+    } else {
+      document.getElementById('recoveryInfo').innerHTML = `12ヶ月時点の累計損益: <strong style="color:var(--danger)">${fmt(finalCum)}</strong><br>現在の収支では投資回収が困難です。売上増加または経費削減の検討が必要です。`;
+    }
+  }
+}
+
+// ===== SP View (Pattern C: Summary) =====
+function renderSpView(results, yearRev, yearExp, yearProfit, profitRate) {
+  const el = document.getElementById('spView');
+  if (!el) return;
+
+  const EXPENSE_KEYS = ['advertising','labor','benefit','utilities','communication','outsource','royalty','adAgencyFee','creditFee','rent','misc'];
+  const initial = getInitialTotal();
+
+  // Profit bar chart
+  const profits = results.map(r => r.profit);
+  const maxProfit = Math.max(...profits.map(Math.abs), 1);
+
+  let barsHtml = '';
+  for (let i = 0; i < MONTHS; i++) {
+    const v = profits[i];
+    const h = Math.round(Math.abs(v) / maxProfit * 70);
+    const color = v >= 0 ? 'rgba(22,163,74,0.55)' : 'rgba(220,38,38,0.55)';
+    barsHtml += `<div class="sp-bar-col"><div class="sp-bar-rect" style="height:${h}px;background:${color}"></div><div class="sp-bar-label">${getMonthLabel(i)}</div></div>`;
+  }
+
+  // Expense breakdown
+  const yearExpenses = {};
+  EXPENSE_KEYS.forEach(k => yearExpenses[k] = 0);
+  results.forEach(r => EXPENSE_KEYS.forEach(k => yearExpenses[k] += r.expenses[k]));
+
+  const sorted = EXPENSE_KEYS.filter(k => yearExpenses[k] > 0).sort((a,b) => yearExpenses[b] - yearExpenses[a]);
+  const topMax = sorted.length > 0 ? yearExpenses[sorted[0]] : 1;
+
+  let expHtml = '';
+  sorted.forEach(k => {
+    const v = yearExpenses[k];
+    const pct = yearExp > 0 ? (v / yearExp * 100).toFixed(1) : '0.0';
+    const barW = Math.round(v / topMax * 100);
+    expHtml += `<div class="sp-exp-row">
+      <div class="sp-exp-left"><span class="sp-exp-name">${FIELD_LABELS[k]}</span><span class="sp-exp-pct">${pct}%</span></div>
+      <div class="sp-exp-right"><div class="sp-exp-bar"><div class="sp-exp-bar-fill" style="width:${barW}%"></div></div><span class="sp-exp-val">${fmt(v)}</span></div>
+    </div>`;
+  });
+
+  // Recovery
+  let recoveryHtml = '';
+  if (initial > 0) {
+    const avgProfit = yearProfit / MONTHS;
+    if (avgProfit > 0) {
+      const months = Math.ceil(initial / avgProfit);
+      recoveryHtml = `<div class="sp-recovery-card"><div class="sub">投資回収期間</div><div class="big">約${months}ヶ月</div><div class="sub">初期投資 ${fmt(initial)} / 月平均利益 ${fmt(Math.round(avgProfit))}</div></div>`;
+    } else {
+      recoveryHtml = `<div class="sp-recovery-card"><div class="sub">投資回収期間</div><div class="big" style="color:var(--danger)">回収困難</div><div class="sub">現在の収支では投資回収が見込めません</div></div>`;
+    }
+  }
+
+  // Month tabs + card (Pattern B)
+  let monthTabsHtml = '<div class="sp-month-tabs">';
+  for (let i = 0; i < MONTHS; i++) {
+    monthTabsHtml += `<div class="sp-mt-btn ${i === spCurrentMonth ? 'active' : ''}" onclick="selectSpMonth(${i})">${getMonthLabel(i)}</div>`;
+  }
+  monthTabsHtml += '</div>';
+
+  el.innerHTML = `
+    <div class="sp-section-title">月別 営業利益</div>
+    <div class="sp-mini-chart">${barsHtml}</div>
+    <div class="sp-section-title">年間経費 内訳</div>
+    <div class="sp-expense-card">${expHtml}</div>
+    ${recoveryHtml}
+    <div class="sp-section-title">月別 収支明細</div>
+    ${monthTabsHtml}
+    <div id="spMonthCard"></div>
+  `;
+  renderSpMonthCard(results);
+}
+
+let spCurrentMonth = 0;
+
+function selectSpMonth(m) {
+  spCurrentMonth = m;
+  // Update active tab
+  document.querySelectorAll('.sp-mt-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === m);
+  });
+  // Re-render card with stored results
+  if (window._spResults) renderSpMonthCard(window._spResults);
+}
+
+function renderSpMonthCard(results) {
+  window._spResults = results; // store for tab switching
+  const el = document.getElementById('spMonthCard');
+  if (!el) return;
+  const m = spCurrentMonth;
+  const r = results[m];
+  const EXPENSE_KEYS = ['advertising','labor','benefit','utilities','communication','outsource','royalty','adAgencyFee','creditFee','rent','misc'];
+
+  let rows = `<div class="sp-mc-row rev"><span>売上</span><span>${fmt(r.revenue)}</span></div>`;
+  EXPENSE_KEYS.forEach(k => {
+    rows += `<div class="sp-mc-row"><span class="lbl">${FIELD_LABELS[k]}</span><span class="val">${fmt(r.expenses[k])}</span></div>`;
+  });
+  rows += `<div class="sp-mc-row total"><span>経費合計</span><span>${fmt(r.totalExpense)}</span></div>`;
+  rows += `<div class="sp-mc-row profit"><span>営業利益</span><span style="color:${r.profit >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(r.profit)}</span></div>`;
+  rows += `<div class="sp-mc-row"><span class="lbl">累計損益</span><span style="color:${r.cumProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(r.cumProfit)}</span></div>`;
+
+  el.innerHTML = `<div class="sp-month-card">
+    <div class="sp-mc-header"><span>${getMonthLabel(m)}</span><span class="sub">${m + 1}ヶ月目</span></div>
+    ${rows}
+  </div>`;
+}
+
+// ===== Chart =====
+function renderChart(results) {
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width;
+  const h = rect.height;
+  const pad = { top: 30, right: 20, bottom: 40, left: 70 };
+  const chartW = w - pad.left - pad.right;
+  const chartH = h - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const profits = results.map(r => r.profit);
+  const cums = results.map(r => r.cumProfit);
+  const allVals = [...profits, ...cums];
+  const maxV = Math.max(...allVals, 0);
+  const minV = Math.min(...allVals, 0);
+  const range = (maxV - minV) || 1;
+  const yScale = chartH / (range * 1.1);
+  const zeroY = pad.top + (maxV * 1.05) * yScale;
+
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const v = minV + (range * i / 5);
+    const y = zeroY - v * yScale;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+    ctx.fillStyle = '#6b7280'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText((Math.round(v/10000)) + '万', pad.left - 6, y + 4);
+  }
+
+  ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(w - pad.right, zeroY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const barW = chartW / MONTHS * 0.5;
+  const gap = chartW / MONTHS;
+
+  for (let i = 0; i < MONTHS; i++) {
+    const x = pad.left + gap * i + gap/2 - barW/2;
+    const v = profits[i];
+    const barH = Math.abs(v) * yScale;
+    ctx.fillStyle = v >= 0 ? 'rgba(22,163,74,0.6)' : 'rgba(220,38,38,0.6)';
+    ctx.fillRect(x, v >= 0 ? zeroY - barH : zeroY, barW, barH);
+
+    ctx.fillStyle = '#374151'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(getMonthLabel(i), pad.left + gap * i + gap/2, h - pad.bottom + 16);
+  }
+
+  ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i < MONTHS; i++) {
+    const x = pad.left + gap * i + gap/2;
+    const y = zeroY - cums[i] * yScale;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  for (let i = 0; i < MONTHS; i++) {
+    const x = pad.left + gap * i + gap/2;
+    const y = zeroY - cums[i] * yScale;
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = cums[i] >= 0 ? '#16a34a' : '#dc2626'; ctx.fill();
+    ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+  }
+
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = 'rgba(22,163,74,0.6)'; ctx.fillRect(pad.left, 6, 14, 14);
+  ctx.fillStyle = '#374151'; ctx.textAlign = 'left'; ctx.fillText('月次営業利益', pad.left + 18, 17);
+  ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(pad.left + 130, 13); ctx.lineTo(pad.left + 150, 13); ctx.stroke();
+  ctx.fillText('累計損益', pad.left + 155, 17);
+}
+
+// ===== Device Toggle =====
+function setDevice(mode, btn) {
+  document.body.classList.remove('sp-mode', 'pc-mode');
+  if (mode === 'sp') document.body.classList.add('sp-mode');
+  else if (mode === 'pc') document.body.classList.add('pc-mode');
+  document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  // Re-render chart for new width
+  setTimeout(() => {
+    const params = getGlobalParams();
+    const results = [];
+    let cum = -getInitialTotal();
+    for (let i = 0; i < MONTHS; i++) {
+      const r = getMonthResult(i, params);
+      cum += r.profit;
+      results.push({ ...r, cumProfit: cum });
+    }
+    renderChart(results);
+  }, 100);
+}
+
+// ===== Toggle =====
+function toggleSection(header) {
+  header.classList.toggle('collapsed');
+  header.nextElementSibling.classList.toggle('collapsed');
+}
+
+function setView(view, btn) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  recalcAll();
+}
+
+// ===== Save / Load =====
+const STORAGE_KEY = 'fc_simulation_data';
+
+function getAllState() {
+  return {
+    version: 2,
+    startMonth: startMonth,
+    costItems: costItems,
+    monthlyData: monthlyData,
+    benefitRate: Number(document.getElementById('benefitRate').value),
+    outsourceRate: Number(document.getElementById('outsourceRate').value),
+    personalRevenue: Number(document.getElementById('personalRevenue').value),
+    royaltyRate: Number(document.getElementById('royaltyRate').value),
+  };
+}
+
+function applyState(state) {
+  if (!state || !state.version) return false;
+  startMonth = state.startMonth || 4;
+  costItems = state.costItems || [...defaultCostItems];
+  monthlyData = state.monthlyData || [];
+  // Ensure 12 months exist
+  while (monthlyData.length < MONTHS) {
+    const d = { laborSalary: 0, laborCount: 0 };
+    MANUAL_FIELDS.forEach(f => d[f] = 0);
+    monthlyData.push(d);
+  }
+  document.getElementById('startMonth').value = startMonth;
+  document.getElementById('benefitRate').value = state.benefitRate ?? 15;
+  document.getElementById('outsourceRate').value = state.outsourceRate ?? 30;
+  document.getElementById('personalRevenue').value = state.personalRevenue ?? 0;
+  document.getElementById('royaltyRate').value = state.royaltyRate ?? 15;
+  currentMonth = 0;
+  renderCostItems();
+  renderMonthTabs();
+  renderMonthEditor();
+  recalcAll();
+  return true;
+}
+
+function autoSave() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(getAllState()));
+    const el = document.getElementById('saveStatus');
+    if (el) {
+      el.textContent = '自動保存: ' + new Date().toLocaleTimeString('ja-JP');
+      el.style.color = 'var(--success)';
+    }
+  } catch(e) {}
+}
+
+function autoLoad() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return applyState(JSON.parse(raw));
+  } catch(e) {}
+  return false;
+}
+
+function exportJSON() {
+  const data = getAllState();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.download = `FC収支シミュレーション_${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const state = JSON.parse(e.target.result);
+      if (applyState(state)) {
+        autoSave();
+        const el = document.getElementById('saveStatus');
+        if (el) { el.textContent = 'データを読み込みました'; el.style.color = 'var(--primary)'; }
+      } else {
+        alert('ファイル形式が正しくありません');
+      }
+    } catch(err) {
+      alert('ファイルの読み込みに失敗しました');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset for re-select
+}
+
+function resetAll() {
+  if (!confirm('すべてのデータをリセットしますか？\n（この操作は元に戻せません）')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  costItems = defaultCostItems.map(c => ({...c}));
+  initMonthlyData();
+  startMonth = 4;
+  document.getElementById('startMonth').value = 4;
+  document.getElementById('benefitRate').value = 15;
+  document.getElementById('outsourceRate').value = 30;
+  document.getElementById('personalRevenue').value = 0;
+  document.getElementById('royaltyRate').value = 15;
+  currentMonth = 0;
+  renderCostItems();
+  renderMonthTabs();
+  renderMonthEditor();
+  recalcAll();
+  const el = document.getElementById('saveStatus');
+  if (el) { el.textContent = 'リセットしました'; el.style.color = 'var(--danger)'; }
+}
+
+// Hook autoSave into recalcAll
+const _origRecalcAll = recalcAll;
+recalcAll = function() {
+  _origRecalcAll();
+  autoSave();
+};
+
+// ===== Init =====
+// Try to load saved data first
+if (!autoLoad()) {
+  // No saved data, use defaults
+  renderCostItems();
+  renderMonthTabs();
+  renderMonthEditor();
+  recalcAll();
+}
+
+window.addEventListener('resize', () => {
+  const params = getGlobalParams();
+  const results = [];
+  let cum = -getInitialTotal();
+  for (let i = 0; i < MONTHS; i++) {
+    const r = getMonthResult(i, params);
+    cum += r.profit;
+    results.push({ ...r, cumProfit: cum });
+  }
+  renderChart(results);
+});
+</script>
+
+</body>
+</html>
