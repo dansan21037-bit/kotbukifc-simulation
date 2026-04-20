@@ -396,74 +396,181 @@ body.sp-mode .start-month-bar { display: none !important; }
 body.sp-mode .save-bar { display: none !important; }
 body.sp-mode .view-toggle { display: none !important; }
 
-/* SP summary view styles */
-.sp-section-title { font-weight: 700; font-size: 0.85rem; color: var(--gray-700); margin: 16px 0 8px; }
+/* SP summary view styles — Enhanced Pattern C */
+/* In SP mode, hide default summary cards (we show hero+kpi grid instead) */
+body.sp-mode .summary-cards { display: none !important; }
 
-.sp-mini-chart {
-  display: flex; align-items: end; gap: 3px; height: 100px;
-  background: white; border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  padding: 12px 8px 4px;
+/* Hero card */
+.sp-hero {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: white; border-radius: 16px; padding: 18px 18px 20px;
+  box-shadow: 0 8px 20px rgba(22,163,74,0.25); margin-bottom: 14px;
+  position: relative; overflow: hidden;
 }
-.sp-bar-col { flex: 1; text-align: center; }
-.sp-bar-rect { border-radius: 3px 3px 0 0; margin: 0 auto; width: 75%; transition: height 0.3s; }
-.sp-bar-label { font-size: 0.55rem; color: var(--gray-500); margin-top: 3px; }
+.sp-hero.negative { background: linear-gradient(135deg, #dc2626, #991b1b); box-shadow: 0 8px 20px rgba(220,38,38,0.25); }
+.sp-hero::before {
+  content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%); border-radius: 50%;
+}
+.sp-hero-label { font-size: 0.7rem; opacity: 0.95; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.sp-hero-label::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; background: white;
+  border-radius: 50%; box-shadow: 0 0 8px rgba(255,255,255,0.6);
+}
+.sp-hero-value { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0; line-height: 1.1; }
+.sp-hero-sub {
+  font-size: 0.75rem; opacity: 0.95; display: flex; justify-content: space-between;
+  align-items: center; padding-top: 10px; margin-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+.sp-hero-badge { display: inline-block; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
 
-.sp-expense-card {
-  background: white; border-radius: var(--radius); padding: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+/* KPI row */
+.sp-kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.sp-kpi-card {
+  background: white; border-radius: 14px; padding: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06); position: relative; overflow: hidden;
+}
+.sp-kpi-card::after {
+  content: ''; position: absolute; top: 0; right: 0; width: 50px; height: 50px;
+  border-radius: 0 14px 0 50px; opacity: 0.12;
+}
+.sp-kpi-card.revenue::after { background: var(--primary); }
+.sp-kpi-card.expense::after { background: var(--danger); }
+.sp-kpi-card.recovery::after { background: var(--warn, #f59e0b); }
+.sp-kpi-card.invest::after { background: var(--success); }
+.sp-kpi-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; margin-bottom: 8px;
+}
+.sp-kpi-icon.revenue { background: #dbeafe; color: var(--primary); }
+.sp-kpi-icon.expense { background: #fee2e2; color: var(--danger); }
+.sp-kpi-icon.recovery { background: #fef3c7; color: #f59e0b; }
+.sp-kpi-icon.invest { background: #dcfce7; color: var(--success); }
+.sp-kpi-label { font-size: 0.7rem; color: var(--gray-500); font-weight: 500; }
+.sp-kpi-value { font-size: 1.1rem; font-weight: 700; margin-top: 2px; }
+.sp-kpi-value.lg { font-size: 1.3rem; }
+.sp-kpi-value.pos { color: var(--success); }
+.sp-kpi-value.neg { color: var(--danger); }
+
+/* Progress card */
+.sp-progress-card {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 14px; padding: 16px; margin-bottom: 14px;
+  border: 1px solid #fcd34d;
+}
+.sp-progress-title {
+  display: flex; align-items: center; gap: 8px; font-size: 0.8rem;
+  font-weight: 700; color: #78350f; margin-bottom: 10px;
+}
+.sp-progress-bar {
+  height: 10px; background: rgba(255,255,255,0.5); border-radius: 5px; overflow: hidden; position: relative;
+}
+.sp-progress-fill {
+  height: 100%; background: linear-gradient(90deg, #f59e0b, #f97316);
+  border-radius: 5px; transition: width 0.5s;
+}
+.sp-progress-info {
+  display: flex; justify-content: space-between; margin-top: 8px;
+  font-size: 0.72rem; color: #78350f; font-weight: 600;
+}
+
+/* Section title */
+.sp-section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 0.9rem; color: var(--gray-700); margin: 18px 0 10px;
+}
+.sp-section-title .icon {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+}
+.sp-section-title .icon.chart { background: #dbeafe; color: var(--primary); }
+.sp-section-title .icon.pie { background: #fef3c7; color: #f59e0b; }
+.sp-section-title .icon.calendar { background: #e0e7ff; color: #6366f1; }
+
+/* Revenue/Profit combo chart */
+.sp-chart-card {
+  background: white; border-radius: 14px; padding: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.sp-combo-chart { display: flex; align-items: end; gap: 3px; height: 120px; margin-top: 10px; }
+.sp-cc-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.sp-cc-bars { flex: 1; display: flex; align-items: end; gap: 1px; width: 100%; justify-content: center; }
+.sp-cc-bar-rev { width: 7px; background: linear-gradient(to top, #3b82f6, #60a5fa); border-radius: 2px 2px 0 0; }
+.sp-cc-bar-profit { width: 7px; background: linear-gradient(to top, #16a34a, #4ade80); border-radius: 2px 2px 0 0; }
+.sp-cc-bar-profit.neg { background: linear-gradient(to top, #dc2626, #f87171); }
+.sp-cc-label { font-size: 0.55rem; color: var(--gray-500); margin-top: 4px; }
+.sp-legend-row { display: flex; gap: 14px; margin-top: 2px; font-size: 0.7rem; color: var(--gray-700); }
+.sp-legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+
+/* Expense list */
+.sp-exp-list {
+  background: white; border-radius: 14px; padding: 4px 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 .sp-exp-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 7px 0; border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0; border-bottom: 1px solid var(--gray-100);
 }
 .sp-exp-row:last-child { border-bottom: none; }
-.sp-exp-left { display: flex; align-items: center; gap: 6px; }
-.sp-exp-name { font-size: 0.8rem; color: var(--gray-700); }
-.sp-exp-pct { font-size: 0.65rem; color: var(--gray-500); }
-.sp-exp-right { display: flex; align-items: center; gap: 6px; }
-.sp-exp-bar { width: 50px; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
-.sp-exp-bar-fill { height: 100%; border-radius: 3px; background: var(--primary); }
-.sp-exp-val { font-size: 0.8rem; font-weight: 600; color: var(--gray-700); min-width: 80px; text-align: right; }
+.sp-exp-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.sp-exp-info { flex: 1; min-width: 0; }
+.sp-exp-name { font-size: 0.82rem; color: var(--gray-700); font-weight: 500; }
+.sp-exp-pct { font-size: 0.65rem; color: var(--gray-500); margin-top: 1px; }
+.sp-exp-val { font-size: 0.85rem; font-weight: 700; color: var(--gray-900); }
 
-.sp-recovery-card {
-  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius);
-  padding: 14px; margin-top: 14px; text-align: center;
-}
-.sp-recovery-card .big { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
-.sp-recovery-card .sub { font-size: 0.75rem; color: var(--gray-500); margin-top: 2px; }
-
-/* SP month card (Pattern B) */
+/* Month tabs */
 .sp-month-tabs {
-  display: flex; gap: 4px; overflow-x: auto; padding-bottom: 8px; margin: 14px 0 10px;
-  -webkit-overflow-scrolling: touch;
+  display: flex; gap: 5px; overflow-x: auto; padding: 2px 0 10px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
+.sp-month-tabs::-webkit-scrollbar { display: none; }
 .sp-mt-btn {
-  flex-shrink: 0; padding: 5px 12px; border-radius: 16px;
-  border: 1px solid var(--gray-300); background: white;
-  font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  flex-shrink: 0; padding: 7px 13px; border-radius: 18px;
+  border: 1.5px solid var(--gray-200); background: white;
+  font-size: 0.75rem; font-weight: 700; color: var(--gray-700);
+  cursor: pointer; transition: all 0.2s;
 }
-.sp-mt-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.sp-mt-btn.active {
+  background: var(--primary); color: white; border-color: var(--primary);
+  box-shadow: 0 3px 8px rgba(37,99,235,0.3);
+}
 
+/* Month detail card */
 .sp-month-card {
-  background: white; border-radius: var(--radius); padding: 14px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  background: white; border-radius: 14px; padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 .sp-mc-header {
-  font-weight: 700; font-size: 0.95rem; color: var(--primary);
-  border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 10px;
-  display: flex; justify-content: space-between;
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 12px; margin-bottom: 12px; border-bottom: 2px solid var(--gray-100);
 }
-.sp-mc-header .sub { font-size: 0.7rem; color: var(--gray-500); font-weight: 400; }
-.sp-mc-row {
-  display: flex; justify-content: space-between; padding: 5px 0;
-  font-size: 0.82rem; border-bottom: 1px solid var(--gray-100);
+.sp-mc-month { font-size: 1.25rem; font-weight: 800; color: var(--primary); }
+.sp-mc-counter {
+  background: #dbeafe; color: var(--primary); padding: 3px 10px;
+  border-radius: 10px; font-size: 0.7rem; font-weight: 700;
 }
-.sp-mc-row:last-child { border-bottom: none; }
-.sp-mc-row.rev { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
-.sp-mc-row.total { border-top: 2px solid var(--gray-900); border-bottom: none; font-weight: 700; margin-top: 6px; padding-top: 8px; }
-.sp-mc-row.profit { font-weight: 700; font-size: 0.9rem; }
+.sp-mc-rev-box {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sp-mc-rev-box .lbl { font-size: 0.75rem; color: var(--primary); font-weight: 700; }
+.sp-mc-rev-box .val { font-size: 1.1rem; font-weight: 800; color: var(--primary); }
+.sp-mc-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.82rem; }
+.sp-mc-row.total {
+  border-top: 1.5px solid var(--gray-300); padding-top: 10px; margin-top: 6px; font-weight: 700;
+}
+.sp-mc-row.profit {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  padding: 11px 14px; margin-top: 8px; border-radius: 10px;
+  font-weight: 800; font-size: 0.95rem;
+}
+.sp-mc-row.profit.negative { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+.sp-mc-row.cum { padding: 10px 0 0; font-weight: 600; font-size: 0.8rem; color: var(--gray-500); }
 .sp-mc-row .lbl { color: var(--gray-700); }
-.sp-mc-row .val { font-weight: 600; }
+.sp-mc-row .val { font-weight: 600; color: var(--gray-900); }
 
 /* PC mode forced via class */
 body.pc-mode .container { max-width: 1200px; }
@@ -1010,50 +1117,101 @@ function renderSpView(results, yearRev, yearExp, yearProfit, profitRate) {
   const EXPENSE_KEYS = ['advertising','labor','benefit','utilities','communication','outsource','royalty','adAgencyFee','creditFee','rent','misc'];
   const initial = getInitialTotal();
 
-  // Profit bar chart
-  const profits = results.map(r => r.profit);
-  const maxProfit = Math.max(...profits.map(Math.abs), 1);
+  // ===== Hero: 年間営業利益 =====
+  const heroCls = yearProfit >= 0 ? '' : 'negative';
+  const heroBadge = yearProfit >= 0 ? '📈 黒字' : '📉 赤字';
+  const heroHtml = `
+    <div class="sp-hero ${heroCls}">
+      <div class="sp-hero-label">年間営業利益</div>
+      <div class="sp-hero-value">${fmt(yearProfit)}</div>
+      <div class="sp-hero-sub">
+        <span>利益率 <strong>${profitRate}%</strong></span>
+        <span class="sp-hero-badge">${heroBadge}</span>
+      </div>
+    </div>`;
 
-  let barsHtml = '';
-  for (let i = 0; i < MONTHS; i++) {
-    const v = profits[i];
-    const h = Math.round(Math.abs(v) / maxProfit * 70);
-    const color = v >= 0 ? 'rgba(22,163,74,0.55)' : 'rgba(220,38,38,0.55)';
-    barsHtml += `<div class="sp-bar-col"><div class="sp-bar-rect" style="height:${h}px;background:${color}"></div><div class="sp-bar-label">${getMonthLabel(i)}</div></div>`;
+  // ===== KPI Row =====
+  const recovery = getRecoveryMonthsText(results);
+  const kpiHtml = `
+    <div class="sp-kpi-row">
+      <div class="sp-kpi-card revenue">
+        <div class="sp-kpi-icon revenue">💰</div>
+        <div class="sp-kpi-label">年間売上</div>
+        <div class="sp-kpi-value">${fmt(yearRev)}</div>
+      </div>
+      <div class="sp-kpi-card expense">
+        <div class="sp-kpi-icon expense">💸</div>
+        <div class="sp-kpi-label">年間経費</div>
+        <div class="sp-kpi-value">${fmt(yearExp)}</div>
+      </div>
+      <div class="sp-kpi-card recovery">
+        <div class="sp-kpi-icon recovery">⏱️</div>
+        <div class="sp-kpi-label">投資回収</div>
+        <div class="sp-kpi-value lg ${recovery.cls}">${recovery.value}</div>
+      </div>
+      <div class="sp-kpi-card invest">
+        <div class="sp-kpi-icon invest">🏦</div>
+        <div class="sp-kpi-label">初期投資</div>
+        <div class="sp-kpi-value">${fmt(initial)}</div>
+      </div>
+    </div>`;
+
+  // ===== Progress bar (recovery progress) =====
+  let progressHtml = '';
+  if (initial > 0) {
+    const recovered = Math.max(0, initial + results[MONTHS-1].cumProfit); // initial - remaining
+    // cumProfit = -initial + sum(profit). recovered amount = cumProfit + initial
+    const pct = Math.min(100, Math.max(0, Math.round(recovered / initial * 100)));
+    progressHtml = `
+      <div class="sp-progress-card">
+        <div class="sp-progress-title"><span>🎯</span><span>投資回収進捗（12ヶ月時点）</span></div>
+        <div class="sp-progress-bar"><div class="sp-progress-fill" style="width:${pct}%"></div></div>
+        <div class="sp-progress-info">
+          <span>現在 ${fmt(Math.round(recovered))} 回収</span>
+          <span>${pct}% / ${fmt(initial)}</span>
+        </div>
+      </div>`;
   }
 
-  // Expense breakdown
+  // ===== 売上・営業利益の推移 (combo chart) =====
+  const revenues = results.map(r => r.revenue);
+  const profits = results.map(r => r.profit);
+  const maxVal = Math.max(...revenues, ...profits.map(Math.abs), 1);
+
+  let comboHtml = '';
+  for (let i = 0; i < MONTHS; i++) {
+    const rh = Math.round(revenues[i] / maxVal * 100);
+    const pv = profits[i];
+    const ph = Math.round(Math.abs(pv) / maxVal * 100);
+    const pClass = pv >= 0 ? '' : 'neg';
+    comboHtml += `<div class="sp-cc-col">
+      <div class="sp-cc-bars">
+        <div class="sp-cc-bar-rev" style="height:${rh}%"></div>
+        <div class="sp-cc-bar-profit ${pClass}" style="height:${ph}%"></div>
+      </div>
+      <div class="sp-cc-label">${getMonthLabel(i)}</div>
+    </div>`;
+  }
+
+  // ===== 年間経費内訳 =====
   const yearExpenses = {};
   EXPENSE_KEYS.forEach(k => yearExpenses[k] = 0);
   results.forEach(r => EXPENSE_KEYS.forEach(k => yearExpenses[k] += r.expenses[k]));
-
   const sorted = EXPENSE_KEYS.filter(k => yearExpenses[k] > 0).sort((a,b) => yearExpenses[b] - yearExpenses[a]);
-  const topMax = sorted.length > 0 ? yearExpenses[sorted[0]] : 1;
+  const COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#ef4444','#6366f1','#14b8a6','#f97316','#6b7280'];
 
   let expHtml = '';
-  sorted.forEach(k => {
+  sorted.forEach((k, i) => {
     const v = yearExpenses[k];
     const pct = yearExp > 0 ? (v / yearExp * 100).toFixed(1) : '0.0';
-    const barW = Math.round(v / topMax * 100);
     expHtml += `<div class="sp-exp-row">
-      <div class="sp-exp-left"><span class="sp-exp-name">${FIELD_LABELS[k]}</span><span class="sp-exp-pct">${pct}%</span></div>
-      <div class="sp-exp-right"><div class="sp-exp-bar"><div class="sp-exp-bar-fill" style="width:${barW}%"></div></div><span class="sp-exp-val">${fmt(v)}</span></div>
+      <div class="sp-exp-dot" style="background:${COLORS[i % COLORS.length]}"></div>
+      <div class="sp-exp-info"><div class="sp-exp-name">${FIELD_LABELS[k]}</div><div class="sp-exp-pct">${pct}%</div></div>
+      <div class="sp-exp-val">${fmt(v)}</div>
     </div>`;
   });
 
-  // Recovery
-  let recoveryHtml = '';
-  if (initial > 0) {
-    const avgProfit = yearProfit / MONTHS;
-    if (avgProfit > 0) {
-      const months = Math.ceil(initial / avgProfit);
-      recoveryHtml = `<div class="sp-recovery-card"><div class="sub">投資回収期間</div><div class="big">約${months}ヶ月</div><div class="sub">初期投資 ${fmt(initial)} / 月平均利益 ${fmt(Math.round(avgProfit))}</div></div>`;
-    } else {
-      recoveryHtml = `<div class="sp-recovery-card"><div class="sub">投資回収期間</div><div class="big" style="color:var(--danger)">回収困難</div><div class="sub">現在の収支では投資回収が見込めません</div></div>`;
-    }
-  }
-
-  // Month tabs + card (Pattern B)
+  // ===== Month tabs =====
   let monthTabsHtml = '<div class="sp-month-tabs">';
   for (let i = 0; i < MONTHS; i++) {
     monthTabsHtml += `<div class="sp-mt-btn ${i === spCurrentMonth ? 'active' : ''}" onclick="selectSpMonth(${i})">${getMonthLabel(i)}</div>`;
@@ -1061,12 +1219,20 @@ function renderSpView(results, yearRev, yearExp, yearProfit, profitRate) {
   monthTabsHtml += '</div>';
 
   el.innerHTML = `
-    <div class="sp-section-title">月別 営業利益</div>
-    <div class="sp-mini-chart">${barsHtml}</div>
-    <div class="sp-section-title">年間経費 内訳</div>
-    <div class="sp-expense-card">${expHtml}</div>
-    ${recoveryHtml}
-    <div class="sp-section-title">月別 収支明細</div>
+    ${heroHtml}
+    ${kpiHtml}
+    ${progressHtml}
+    <div class="sp-section-title"><span class="icon chart">📊</span><span>売上・営業利益の推移</span></div>
+    <div class="sp-chart-card">
+      <div class="sp-legend-row">
+        <span><span class="sp-legend-dot" style="background:#3b82f6"></span>売上</span>
+        <span><span class="sp-legend-dot" style="background:#16a34a"></span>営業利益</span>
+      </div>
+      <div class="sp-combo-chart">${comboHtml}</div>
+    </div>
+    <div class="sp-section-title"><span class="icon pie">🥧</span><span>年間経費の内訳</span></div>
+    <div class="sp-exp-list">${expHtml}</div>
+    <div class="sp-section-title"><span class="icon calendar">📅</span><span>月別収支明細</span></div>
     ${monthTabsHtml}
     <div id="spMonthCard"></div>
   `;
@@ -1077,32 +1243,33 @@ let spCurrentMonth = 0;
 
 function selectSpMonth(m) {
   spCurrentMonth = m;
-  // Update active tab
   document.querySelectorAll('.sp-mt-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === m);
   });
-  // Re-render card with stored results
   if (window._spResults) renderSpMonthCard(window._spResults);
 }
 
 function renderSpMonthCard(results) {
-  window._spResults = results; // store for tab switching
+  window._spResults = results;
   const el = document.getElementById('spMonthCard');
   if (!el) return;
   const m = spCurrentMonth;
   const r = results[m];
   const EXPENSE_KEYS = ['advertising','labor','benefit','utilities','communication','outsource','royalty','adAgencyFee','creditFee','rent','misc'];
 
-  let rows = `<div class="sp-mc-row rev"><span>売上</span><span>${fmt(r.revenue)}</span></div>`;
+  let rows = '';
   EXPENSE_KEYS.forEach(k => {
     rows += `<div class="sp-mc-row"><span class="lbl">${FIELD_LABELS[k]}</span><span class="val">${fmt(r.expenses[k])}</span></div>`;
   });
   rows += `<div class="sp-mc-row total"><span>経費合計</span><span>${fmt(r.totalExpense)}</span></div>`;
-  rows += `<div class="sp-mc-row profit"><span>営業利益</span><span style="color:${r.profit >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(r.profit)}</span></div>`;
-  rows += `<div class="sp-mc-row"><span class="lbl">累計損益</span><span style="color:${r.cumProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(r.cumProfit)}</span></div>`;
+  const profitCls = r.profit >= 0 ? '' : 'negative';
+  const profitColor = r.profit >= 0 ? 'var(--success)' : 'var(--danger)';
+  rows += `<div class="sp-mc-row profit ${profitCls}"><span>営業利益</span><span style="color:${profitColor}">${fmt(r.profit)}</span></div>`;
+  rows += `<div class="sp-mc-row cum"><span>累計損益</span><span style="color:${r.cumProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(r.cumProfit)}</span></div>`;
 
   el.innerHTML = `<div class="sp-month-card">
-    <div class="sp-mc-header"><span>${getMonthLabel(m)}</span><span class="sub">${m + 1}ヶ月目</span></div>
+    <div class="sp-mc-header"><span class="sp-mc-month">${getMonthLabel(m)}</span><span class="sp-mc-counter">${m + 1}ヶ月目</span></div>
+    <div class="sp-mc-rev-box"><span class="lbl">💰 売上</span><span class="val">${fmt(r.revenue)}</span></div>
     ${rows}
   </div>`;
 }
